@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <meta content="SEXLOVE" name="description">
   <title>SEXLOVE</title>
-      <!-- Favicon -->
+        <!-- Favicon -->
     <link href="favicon.ico" rel="icon">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
@@ -58,7 +58,7 @@
       box-shadow: 0 0 6px rgba(46, 204, 113, 0.3);
     }
     .marked-sex::after {
-      content: "💥❤️";
+      content: "❤️";
       position: absolute;
       top: 6px;
       right: 8px;
@@ -104,6 +104,33 @@
       max-height: 250px;
       object-fit: contain;
     }
+    @media (max-width: 576px) {
+  .calendar {
+    gap: 6px;
+  }
+  .day {
+    font-size: 0.75rem;
+    padding: 10px 0;
+  }
+  h2 {
+    font-size: 1.25rem;
+  }
+  #monthYear {
+    font-size: 1rem;
+  }
+}
+.marked-menstrual {
+  background-color: #ffe4ec !important;
+  border: 2px solid #ff4d88;
+  box-shadow: 0 0 6px rgba(255, 77, 136, 0.3);
+}
+.marked-menstrual::after {
+  content: "🩸";
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 1rem;
+}
   </style>
 </head>
 <body>
@@ -123,9 +150,10 @@
     <div class="calendar" id="calendar"></div>
 
     <div class="mt-4 text-center">
-      <span class="me-3"><strong>💥❤️</strong> Sexo</span>
-      <span class="me-3"><strong>👅</strong> Sexo oral</span>
+      <span class="me-3"><strong>❤️</strong> empleo</span>
+      <span class="me-3"><strong>👅</strong> empleo oral</span>
       <span class="me-3"><strong>👉🏾🔥✊🏾</strong> Toqueteo</span>
+      <span class="me-3"><strong>🩸</strong> Menstruación</span>
       <span class="me-3"><strong>😞</strong> Sin actividad</span>
     </div>
 
@@ -175,7 +203,7 @@
 
     function cycleMark(dateStr) {
       const current = getMarkedDays()[dateStr];
-      const types = ["sex", "oral", "touch", "none"];
+      const types = ["sex", "oral", "touch", "menstrual", "none"];
       const next = types[(types.indexOf(current) + 1) % types.length];
       setMarkedDay(dateStr, next);
     }
@@ -186,6 +214,7 @@
         case "oral": return "marked-oral";
         case "touch": return "marked-touch";
         case "none": return "marked-none";
+        case "menstrual": return "marked-menstrual";
         default: return "";
       }
     }
@@ -251,7 +280,7 @@
       const currentYear = currentDate.getFullYear();
       const currentMonth = currentDate.getMonth();
 
-      let sex = 0, oral = 0, touch = 0, none = 0;
+      let sex = 0, oral = 0, touch = 0, menstrual=0, none = 0;
 
       Object.entries(marked).forEach(([fecha, tipo]) => {
         const d = new Date(fecha);
@@ -259,12 +288,13 @@
           if (tipo === "sex") sex++;
           if (tipo === "oral") oral++;
           if (tipo === "touch") touch++;
+          if (tipo === "menstrual") menstrual++;
           if (tipo === "none") none++;
         }
       });
 
       document.getElementById("resumenMensual").textContent =
-        `Este mes: 💥❤️ ${sex} | 👅 ${oral} | 👉🏾🔥✊🏾 ${touch} | 😞 ${none}`;
+        `Este mes: ❤️ ${sex} | 👅 ${oral} | 👉🏾🔥✊🏾 ${touch} | 🩸 ${menstrual}| 😞 ${none}`;
     }
 
     function exportarHistorial() {
@@ -345,4 +375,3 @@
   </script>
 </body>
 </html>
-
