@@ -1,0 +1,1454 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Calendario personal para seguimiento del ciclo menstrual, síntomas, comportamiento y comentarios diarios.">
+<meta name="theme-color" content="#8b3d68">
+<title>Mi Ciclo — Calendario Menstrual</title>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+:root{
+  --primary:#8b3d68;
+  --primary-dark:#632b4b;
+  --primary-light:#f8eaf1;
+  --accent:#c55b89;
+  --bg:#f7f5f7;
+  --card:#fff;
+  --text:#29242a;
+  --muted:#77717a;
+  --border:#e7e0e6;
+  --period:#dc4f82;
+  --estimated:#8669ad;
+  --fertile:#3a9d8f;
+  --ovulation:#f0a43a;
+  --success:#2d8a62;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+.navbar{
+  background:linear-gradient(135deg,var(--primary-dark),var(--primary));
+  box-shadow:0 4px 18px rgba(45,20,40,.15);
+}
+.navbar-brand{letter-spacing:.2px}
+.nav-link{opacity:.92}
+.nav-link:hover{opacity:1}
+.hero{
+  background:linear-gradient(135deg,#733055,#b95d8c);
+  color:white;
+  border-radius:22px;
+  padding:28px;
+  box-shadow:0 12px 30px rgba(99,43,75,.18);
+}
+.eyebrow{
+  display:inline-block;
+  font-size:.68rem;
+  font-weight:800;
+  letter-spacing:.15em;
+  opacity:.78;
+}
+.hero h1{
+  font-size:clamp(1.65rem,4vw,2.6rem);
+  margin:.3rem 0 .5rem;
+  font-weight:800;
+}
+.card{
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:0 5px 22px rgba(47,27,43,.06);
+}
+.summary-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:18px;
+  height:100%;
+}
+.summary-card .label{
+  color:var(--muted);
+  font-size:.78rem;
+}
+.summary-card .value{
+  display:block;
+  font-size:1.4rem;
+  font-weight:800;
+  margin-top:3px;
+}
+.summary-card .hint{
+  color:#969099;
+  font-size:.74rem;
+}
+.card-header{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  border-radius:18px 18px 0 0!important;
+}
+.btn-primary{
+  --bs-btn-bg:var(--primary);
+  --bs-btn-border-color:var(--primary);
+  --bs-btn-hover-bg:var(--primary-dark);
+  --bs-btn-hover-border-color:var(--primary-dark);
+}
+.btn-outline-primary{
+  --bs-btn-color:var(--primary);
+  --bs-btn-border-color:var(--primary);
+  --bs-btn-hover-bg:var(--primary);
+  --bs-btn-hover-border-color:var(--primary);
+}
+.calendar-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:6px;
+}
+.calendar-weekday{
+  text-align:center;
+  font-size:.72rem;
+  font-weight:800;
+  color:var(--muted);
+  padding:7px 2px;
+}
+.calendar-day{
+  position:relative;
+  min-height:82px;
+  background:#fff;
+  border:1px solid transparent;
+  border-radius:12px;
+  padding:8px;
+  text-align:left;
+  cursor:pointer;
+  transition:transform .12s,border-color .12s,box-shadow .12s;
+}
+.calendar-day:hover{
+  transform:translateY(-1px);
+  border-color:#d8c6d1;
+  box-shadow:0 5px 12px rgba(50,25,42,.08);
+}
+.calendar-day.other-month{
+  opacity:.42;
+  background:#fafafa;
+}
+.calendar-day.today{
+  outline:2px solid var(--accent);
+  outline-offset:-2px;
+}
+.calendar-day.period{
+  background:#fde9f1;
+  border-color:#f2b5cc;
+}
+.calendar-day.estimated{
+  background:#f1ecf7;
+  border:1px dashed #9c84bb;
+}
+.calendar-day.fertile{
+  box-shadow:inset 0 -4px 0 rgba(58,157,143,.55);
+}
+.calendar-day.ovulation{
+  background:#fff6e8;
+  border-color:#f0c37e;
+}
+.calendar-day .cycle-emoji{
+  font-size:1rem;
+  line-height:1;
+}
+.calendar-day .ovulation-mark,
+.calendar-day .fertility-mark,
+.calendar-day .mood-mark{
+  font-size:.9rem;
+  line-height:1;
+}
+.calendar-day .mood-mark{font-size:1rem}
+.legend-fertile{background:var(--fertile)}
+.legend-ovulation{background:var(--ovulation)}
+.day-number{
+  font-weight:800;
+  font-size:.84rem;
+}
+.day-content{
+  margin-top:9px;
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+}
+.day-dot{
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  display:inline-block;
+  background:var(--primary);
+}
+.period .day-dot{background:var(--period)}
+.estimated .day-dot{background:var(--estimated)}
+.day-note{
+  font-size:.68rem;
+  color:var(--muted);
+  margin-top:5px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.legend{
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+  font-size:.75rem;
+  color:var(--muted);
+}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend-dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  display:inline-block;
+}
+.legend-period{background:var(--period)}
+.legend-record{background:var(--primary)}
+.legend-estimated{background:var(--estimated)}
+.legend-today{background:#fff;border:2px solid var(--accent)}
+.empty-state{
+  text-align:center;
+  color:var(--muted);
+  padding:38px 15px;
+}
+.empty-state i{
+  display:block;
+  font-size:2.3rem;
+  margin-bottom:10px;
+}
+.symptom-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.symptom-option{
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:10px;
+  cursor:pointer;
+  font-size:.86rem;
+  background:#fff;
+}
+.symptom-option:hover{background:#fbf7f9}
+.symptom-option input{margin-right:6px}
+.range-value{
+  font-weight:800;
+  color:var(--primary);
+}
+.record-dialog{
+  width:min(650px,calc(100% - 24px));
+  max-height:92vh;
+  border:0;
+  padding:0;
+  border-radius:20px;
+  box-shadow:0 25px 80px rgba(25,12,23,.35);
+}
+.record-dialog::backdrop{
+  background:rgba(34,20,31,.65);
+  backdrop-filter:blur(3px);
+}
+.dialog-head,.dialog-foot{
+  padding:18px 22px;
+}
+.dialog-head{border-bottom:1px solid var(--border)}
+.dialog-foot{
+  border-top:1px solid var(--border);
+  display:flex;
+  justify-content:flex-end;
+  gap:8px;
+}
+.dialog-body{
+  padding:20px 22px;
+  overflow:auto;
+  max-height:68vh;
+}
+.history-table th{
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--muted);
+}
+.badge-soft{
+  background:var(--primary-light);
+  color:var(--primary-dark);
+}
+.toast-container{z-index:2000}
+footer{color:var(--muted)}
+@media(max-width:767.98px){
+  .hero{padding:22px}
+  .calendar{gap:3px}
+  .calendar-day{min-height:62px;padding:6px;border-radius:9px}
+  .calendar-weekday{font-size:.63rem}
+  .day-number{font-size:.72rem}
+  .day-note{display:none}
+  .day-content{margin-top:6px}
+  .calendar-toolbar{align-items:flex-start;flex-direction:column}
+  .calendar-toolbar .actions{width:100%;display:flex}
+  .calendar-toolbar .actions .btn{flex:1}
+  .symptom-grid{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+  .calendar-day{min-height:52px;padding:5px}
+  .day-content{display:none}
+  .hero .btn{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand fw-bold" href="#">
+      <i class="bi bi-heart-pulse me-2"></i>Mi Ciclo
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" aria-label="Abrir menú">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navMenu">
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="#resumen">Resumen</a>
+        <a class="nav-link" href="#calendario">Calendario</a>
+        <a class="nav-link" href="#historial">Historial</a>
+        <a class="nav-link" href="#configuracion">Configuración</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="container-xl py-4">
+
+  <section class="hero mb-4">
+    <div class="row align-items-center g-3">
+      <div class="col-lg">
+        <span class="eyebrow">SEGUIMIENTO PERSONAL</span>
+        <h1>Calendario del ciclo menstrual</h1>
+        <p class="mb-0 opacity-75">
+          Registra cada día, observa tus patrones y consulta una estimación del próximo ciclo.
+        </p>
+      </div>
+      <div class="col-lg-auto">
+        <button class="btn btn-light fw-semibold" id="todayButton">
+          <i class="bi bi-calendar2-check me-1"></i> Registrar hoy
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="resumen" class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="summary-card">
+        <span class="label">Último inicio</span>
+        <span class="value" id="summaryLast">—</span>
+        <span class="hint" id="summaryLastHint">Sin registros</span>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="summary-card">
+        <span class="label">Día del ciclo</span>
+        <span class="value" id="summaryCycleDay">—</span>
+        <span class="hint">desde el último inicio</span>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="summary-card">
+        <span class="label">Próximo ciclo</span>
+        <span class="value" id="summaryNext">—</span>
+        <span class="hint">fecha estimada</span>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="summary-card">
+        <span class="label">Registros</span>
+        <span class="value" id="summaryRecords">0</span>
+        <span class="hint">días registrados</span>
+      </div>
+    </div>
+  </section>
+
+  <div id="alertArea" aria-live="polite"></div>
+
+  <section id="calendario" class="card mb-4">
+    <div class="card-header p-3">
+      <div class="calendar-toolbar">
+        <div class="d-flex align-items-center gap-2">
+          <button class="btn btn-outline-secondary btn-sm" id="prevMonth" aria-label="Mes anterior">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <h2 class="h5 mb-0 text-capitalize" id="monthTitle"></h2>
+          <button class="btn btn-outline-secondary btn-sm" id="nextMonth" aria-label="Mes siguiente">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="addButton">
+            <i class="bi bi-plus-lg me-1"></i>Registrar día
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-body p-2 p-md-3">
+      <div id="calendar" class="calendar" role="grid" aria-label="Calendario del ciclo"></div>
+
+      <div class="legend mt-3">
+        <span>🩸 Menstruación registrada</span>
+        <span><i class="legend-dot legend-record"></i>Registro</span>
+        <span>❤️ Mayor fertilidad estimada</span>
+        <span>🌸 Ovulación estimada</span>
+        <span>😊 Estado de ánimo registrado</span>
+        <span><i class="legend-dot legend-estimated"></i>Próximo ciclo</span>
+        <span><i class="legend-dot legend-today"></i>Hoy</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="row g-4 mb-4">
+
+    <div class="col-lg-7">
+      <div class="card h-100">
+        <div class="card-header p-3 d-flex justify-content-between align-items-center">
+          <h2 class="h5 mb-0">Información del día</h2>
+          <span class="badge badge-soft" id="selectedDate">Selecciona una fecha</span>
+        </div>
+        <div class="card-body" id="dayPanel">
+          <div class="empty-state">
+            <i class="bi bi-calendar3"></i>
+            <p class="mb-2">Selecciona un día del calendario.</p>
+            <button class="btn btn-primary btn-sm" id="emptyAddButton">Agregar registro</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5" id="configuracion">
+      <div class="card h-100">
+        <div class="card-header p-3">
+          <h2 class="h5 mb-0">Configuración</h2>
+        </div>
+        <div class="card-body">
+          <form id="settingsForm">
+            <div class="mb-3">
+              <label for="cycleLength" class="form-label">Duración habitual del ciclo</label>
+              <div class="input-group">
+                <input type="number" min="15" max="60" class="form-control" id="cycleLength" required>
+                <span class="input-group-text">días</span>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="periodLength" class="form-label">Duración habitual de menstruación</label>
+              <div class="input-group">
+                <input type="number" min="1" max="15" class="form-control" id="periodLength" required>
+                <span class="input-group-text">días</span>
+              </div>
+            </div>
+
+            <button class="btn btn-primary w-100" type="submit">
+              <i class="bi bi-save me-1"></i>Guardar configuración
+            </button>
+          </form>
+
+          <hr>
+
+          <div class="d-grid gap-2 mb-3">
+            <button class="btn btn-outline-primary" type="button" id="exportButton">
+              <i class="bi bi-download me-1"></i>Exportar datos
+            </button>
+            <button class="btn btn-outline-secondary" type="button" id="importButton">
+              <i class="bi bi-upload me-1"></i>Importar datos
+            </button>
+            <input type="file" id="importFile" accept=".json,application/json" hidden>
+          </div>
+
+          <div class="small text-secondary">
+            <strong>Importante:</strong> las fechas mostradas son estimaciones calculadas a partir de los datos introducidos.
+            No constituyen diagnóstico médico ni deben utilizarse como método anticonceptivo. Los días de mayor fertilidad son solo una estimación y no garantizan embarazo ni ausencia de embarazo.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <section id="historial" class="card mb-4">
+    <div class="card-header p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <h2 class="h5 mb-0">Historial</h2>
+      <button class="btn btn-outline-danger btn-sm" id="clearButton">
+        <i class="bi bi-trash3 me-1"></i>Eliminar todos los datos
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table history-table align-middle mb-0">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Menstruación</th>
+            <th>Síntomas</th>
+            <th>Comportamiento</th>
+            <th>Comentario</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="text-center py-4 small">
+    Mi Ciclo · Información almacenada localmente en este navegador.
+  </footer>
+
+</main>
+
+<dialog id="recordDialog" class="record-dialog">
+  <form id="recordForm">
+    <div class="dialog-head d-flex justify-content-between align-items-start">
+      <div>
+        <span class="eyebrow" style="color:var(--primary)">REGISTRO DIARIO</span>
+        <h2 class="h4 mb-0">Información del día</h2>
+      </div>
+      <button type="button" class="btn-close" id="closeDialog" aria-label="Cerrar"></button>
+    </div>
+
+    <div class="dialog-body">
+
+      <div class="mb-3">
+        <label for="recordDate" class="form-label">Fecha</label>
+        <input type="date" class="form-control" id="recordDate" required>
+      </div>
+
+      <div class="form-check form-switch mb-4">
+        <input class="form-check-input" type="checkbox" id="isPeriod">
+        <label class="form-check-label fw-semibold" for="isPeriod">
+          Este día corresponde a menstruación
+        </label>
+      </div>
+
+      <fieldset class="mb-4">
+        <legend class="form-label fs-6 fw-semibold">Síntomas / sensaciones</legend>
+        <div class="symptom-grid">
+          <label class="symptom-option"><input type="checkbox" name="symptom" value="Dolor">Dolor</label>
+          <label class="symptom-option"><input type="checkbox" name="symptom" value="Cólicos">Cólicos</label>
+          <label class="symptom-option"><input type="checkbox" name="symptom" value="Dolor de cabeza">Dolor de cabeza</label>
+          <label class="symptom-option"><input type="checkbox" name="symptom" value="Cansancio">Cansancio</label>
+          <label class="symptom-option"><input type="checkbox" name="symptom" value="Hinchazón">Hinchazón</label>
+          <label class="symptom-option"><input type="checkbox" name="symptom" value="Cambios de ánimo">Cambios de ánimo</label>
+          <label class="symptom-option"><input type="checkbox" name="symptom" value="Sensibilidad">Sensibilidad</label>
+          <label class="symptom-option"><input type="checkbox" name="symptom" value="Flujo">Flujo</label>
+        </div>
+      </fieldset>
+
+      <div class="mb-4">
+        <label for="pain" class="form-label">
+          Intensidad del dolor:
+          <span class="range-value" id="painValue">0</span>/10
+        </label>
+        <input type="range" class="form-range" min="0" max="10" value="0" id="pain">
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label for="mood" class="form-label">Estado de ánimo</label>
+          <select class="form-select" id="mood">
+            <option value="">No indicado</option>
+            <option>😊 Muy bien</option>
+            <option>🙂 Bien</option>
+            <option>😐 Normal</option>
+            <option>😕 Variable</option>
+            <option>😞 Bajo</option>
+            <option>😣 Difícil</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="energy" class="form-label">Nivel de energía</label>
+          <select class="form-select" id="energy">
+            <option value="">No indicado</option>
+            <option>Alta</option>
+            <option>Media</option>
+            <option>Baja</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="sleep" class="form-label">Calidad del sueño</label>
+          <select class="form-select" id="sleep">
+            <option value="">No indicado</option>
+            <option>Muy buena</option>
+            <option>Buena</option>
+            <option>Regular</option>
+            <option>Mala</option>
+          </select>
+        </div>
+
+        <div class="col-md-6">
+          <label for="behavior" class="form-label">Comportamiento</label>
+          <select class="form-select" id="behavior">
+            <option value="">No indicado</option>
+            <option>Normal</option>
+            <option>Más cansancio de lo habitual</option>
+            <option>Mayor energía</option>
+            <option>Irritabilidad</option>
+            <option>Tranquilidad</option>
+            <option>Estrés</option>
+            <option>Buen descanso</option>
+            <option>Mal descanso</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label for="comment" class="form-label">Comentarios del día</label>
+        <textarea class="form-control" id="comment" rows="4" maxlength="1500"
+          placeholder="Escribe cualquier observación que quieras recordar..."></textarea>
+        <div class="form-text text-end">Máximo 1.500 caracteres</div>
+      </div>
+
+    </div>
+
+    <div class="dialog-foot">
+      <button type="button" class="btn btn-outline-secondary" id="cancelDialog">Cancelar</button>
+      <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check2 me-1"></i>Guardar registro
+      </button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+  <div id="appToast" class="toast" role="status" aria-live="polite" aria-atomic="true">
+    <div class="toast-header">
+      <i class="bi bi-check-circle-fill text-success me-2"></i>
+      <strong class="me-auto">Mi Ciclo</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+    </div>
+    <div class="toast-body" id="toastMessage"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+"use strict";
+
+/*
+  MI CICLO
+  Aplicación de una sola página.
+  Los datos se almacenan localmente en el navegador mediante localStorage.
+*/
+
+const STORAGE_KEY = "mi_ciclo_single_page_v2";
+
+const state = {
+  records: {},
+  settings: {
+    cycleLength: 28,
+    periodLength: 5
+  },
+  viewDate: new Date(),
+  selectedDate: null
+};
+
+const $ = selector => document.querySelector(selector);
+const $$ = selector => [...document.querySelectorAll(selector)];
+
+function pad(number){
+  return String(number).padStart(2,"0");
+}
+
+function toISO(date){
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;
+}
+
+function fromISO(value){
+  const [year,month,day] = value.split("-").map(Number);
+  return new Date(year,month-1,day);
+}
+
+function addDays(dateString, days){
+  const date = fromISO(dateString);
+  date.setDate(date.getDate() + Number(days));
+  return toISO(date);
+}
+
+function daysBetween(first, second){
+  return Math.round((fromISO(second)-fromISO(first))/86400000);
+}
+
+function formatDate(dateString){
+  return new Intl.DateTimeFormat("es-PY",{
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric"
+  }).format(fromISO(dateString));
+}
+
+function formatMonth(date){
+  return new Intl.DateTimeFormat("es-PY",{
+    month:"long",
+    year:"numeric"
+  }).format(date);
+}
+
+function escapeHTML(value=""){
+  return String(value).replace(/[&<>"']/g,char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#039;"
+  })[char]);
+}
+
+function loadData(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+
+    if(saved.records && typeof saved.records === "object"){
+      state.records = saved.records;
+    }
+
+    if(saved.settings && typeof saved.settings === "object"){
+      state.settings = {
+        ...state.settings,
+        ...saved.settings
+      };
+    }
+  }catch(error){
+    console.error("No fue posible cargar los datos:",error);
+  }
+}
+
+function saveData(){
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      records:state.records,
+      settings:state.settings
+    })
+  );
+}
+
+function getPeriodStarts(){
+  return Object.entries(state.records)
+    .filter(([,record]) => record.period === true)
+    .map(([date]) => date)
+    .sort();
+}
+
+function getLastPeriod(){
+  const dates = getPeriodStarts();
+  return dates.length ? dates[dates.length-1] : null;
+}
+
+function getPreviousPeriodStarts(){
+  return getPeriodStarts().slice(-13);
+}
+
+function calculateAverageCycle(){
+  const starts = getPreviousPeriodStarts();
+
+  if(starts.length < 2){
+    return Number(state.settings.cycleLength);
+  }
+
+  let intervals = [];
+
+  for(let i=1;i<starts.length;i++){
+    const interval = daysBetween(starts[i-1],starts[i]);
+
+    if(interval >= 15 && interval <= 60){
+      intervals.push(interval);
+    }
+  }
+
+  if(!intervals.length){
+    return Number(state.settings.cycleLength);
+  }
+
+  const average = intervals.reduce((sum,value)=>sum+value,0)/intervals.length;
+
+  return Math.round(average);
+}
+
+function calculateNextPeriod(){
+  const last = getLastPeriod();
+
+  if(!last){
+    return null;
+  }
+
+  return addDays(last,calculateAverageCycle());
+}
+
+function calculateOvulation(){
+  const last = getLastPeriod();
+  if(!last) return null;
+
+  // Estimación convencional: aproximadamente 14 días antes del siguiente ciclo.
+  const cycleLength = calculateAverageCycle();
+  return addDays(last, Math.max(0, cycleLength - 14));
+}
+
+function calculateFertileWindow(){
+  const ovulation = calculateOvulation();
+  if(!ovulation) return [];
+
+  // Ventana visual estimada: 5 días previos + día de ovulación + 1 día posterior.
+  const dates = [];
+  for(let offset=-5; offset<=1; offset++){
+    dates.push(addDays(ovulation, offset));
+  }
+  return dates;
+}
+
+function getMoodEmoji(mood=""){
+  const match = String(mood).match(/^[^\s]+/);
+  return match ? match[0] : "";
+}
+
+function calculateHigherFertilityDays(){
+  const ovulation = calculateOvulation();
+  if(!ovulation) return [];
+  // Días destacados alrededor de la ovulación: 2 días previos, día estimado y 1 posterior.
+  return [-2,-1,0,1].map(offset=>addDays(ovulation,offset));
+}
+
+function calculateCycleDay(){
+  const last = getLastPeriod();
+
+  if(!last){
+    return null;
+  }
+
+  const today = toISO(new Date());
+  return daysBetween(last,today) + 1;
+}
+
+function renderSummary(){
+  const last = getLastPeriod();
+  const next = calculateNextPeriod();
+  const cycleDay = calculateCycleDay();
+
+  $("#summaryLast").textContent = last ? formatDate(last) : "—";
+  $("#summaryLastHint").textContent = last ? "Inicio registrado" : "Sin registros";
+
+  $("#summaryCycleDay").textContent =
+    cycleDay !== null && cycleDay >= 1 ? `Día ${cycleDay}` : "—";
+
+  $("#summaryNext").textContent = next ? formatDate(next) : "—";
+
+  $("#summaryRecords").textContent =
+    Object.keys(state.records).length;
+
+  $("#cycleLength").value = state.settings.cycleLength;
+  $("#periodLength").value = state.settings.periodLength;
+}
+
+function renderCalendar(){
+  const calendar = $("#calendar");
+  calendar.innerHTML = "";
+
+  const year = state.viewDate.getFullYear();
+  const month = state.viewDate.getMonth();
+
+  $("#monthTitle").textContent =
+    formatMonth(new Date(year,month,1));
+
+  ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].forEach(day=>{
+    const heading = document.createElement("div");
+    heading.className = "calendar-weekday";
+    heading.textContent = day;
+    heading.setAttribute("role","columnheader");
+    calendar.appendChild(heading);
+  });
+
+  const firstDay = (new Date(year,month,1).getDay()+6)%7;
+  const daysCurrentMonth =
+    new Date(year,month+1,0).getDate();
+
+  const daysPreviousMonth =
+    new Date(year,month,0).getDate();
+
+  const nextPeriod = calculateNextPeriod();
+  const ovulation = calculateOvulation();
+  const fertileWindow = new Set(calculateFertileWindow());
+  const higherFertilityDays = new Set(calculateHigherFertilityDays());
+  const today = toISO(new Date());
+
+  for(let index=0;index<42;index++){
+
+    let date;
+    let otherMonth = false;
+
+    if(index < firstDay){
+      date = toISO(
+        new Date(
+          year,
+          month-1,
+          daysPreviousMonth-firstDay+index+1
+        )
+      );
+      otherMonth = true;
+
+    }else if(index >= firstDay+daysCurrentMonth){
+      date = toISO(
+        new Date(
+          year,
+          month+1,
+          index-firstDay-daysCurrentMonth+1
+        )
+      );
+      otherMonth = true;
+
+    }else{
+      date = toISO(
+        new Date(year,month,index-firstDay+1)
+      );
+    }
+
+    const record = state.records[date];
+
+    const button = document.createElement("button");
+
+    button.type = "button";
+    button.className = "calendar-day";
+    button.setAttribute("role","gridcell");
+    button.setAttribute("aria-label",formatDate(date));
+
+    if(otherMonth) button.classList.add("other-month");
+    if(date === today) button.classList.add("today");
+    if(record?.period) button.classList.add("period");
+    if(fertileWindow.has(date)) button.classList.add("fertile");
+    if(date === ovulation) button.classList.add("ovulation");
+    if(date === nextPeriod) button.classList.add("estimated");
+
+    let html =
+      `<div class="day-number">${fromISO(date).getDate()}</div>`;
+
+    if(record){
+      html += `<div class="day-content">`;
+      if(record.period) html += `<span class="cycle-emoji" title="Menstruación">🩸</span>`;
+      else html += `<span class="day-dot"></span>`;
+      if(higherFertilityDays.has(date) && date !== ovulation) html += `<span class="fertility-mark" title="Mayor fertilidad estimada">❤️</span>`;
+      if(date === ovulation) html += `<span class="ovulation-mark" title="Ovulación estimada">🌸</span>`;
+      const moodEmoji = getMoodEmoji(record.mood);
+      if(moodEmoji) html += `<span class="mood-mark" title="Estado de ánimo">${escapeHTML(moodEmoji)}</span>`;
+      html += `</div>`;
+
+      if(record.comment){
+        html += `<div class="day-note">${escapeHTML(record.comment)}</div>`;
+      }
+    }
+
+    if(!record && (date === nextPeriod || fertileWindow.has(date))){
+      html += `<div class="day-content">`;
+      if(date === ovulation) html += `<span class="ovulation-mark" title="Ovulación estimada">🌸</span>`;
+      else if(higherFertilityDays.has(date)) html += `<span class="fertility-mark" title="Mayor fertilidad estimada">❤️</span>`;
+      else html += `<span class="day-dot"></span>`;
+      html += `</div>`;
+    }
+
+    button.innerHTML = html;
+
+    button.addEventListener("click",()=>{
+      state.selectedDate = date;
+      renderDayPanel();
+    });
+
+    calendar.appendChild(button);
+  }
+}
+
+function renderDayPanel(){
+  const panel = $("#dayPanel");
+  const date = state.selectedDate;
+
+  if(!date){
+    panel.innerHTML = `
+      <div class="empty-state">
+        <i class="bi bi-calendar3"></i>
+        <p>Selecciona un día del calendario.</p>
+      </div>`;
+    return;
+  }
+
+  $("#selectedDate").textContent = formatDate(date);
+
+  const record = state.records[date];
+  const ovulation = calculateOvulation();
+  const fertileWindow = new Set(calculateFertileWindow());
+  const higherFertilityDays = new Set(calculateHigherFertilityDays());
+  const fertilityInfo = date === ovulation
+    ? "🌸 Ovulación estimada"
+    : higherFertilityDays.has(date)
+      ? "❤️ Día de mayor fertilidad estimada"
+      : fertileWindow.has(date)
+        ? "Ventana fértil estimada"
+        : "Fuera de la ventana fértil estimada";
+
+  if(!record){
+    panel.innerHTML = `
+      <div class="empty-state">
+        <i class="bi bi-journal-plus"></i>
+        <p class="mb-2">No existe información registrada para este día.</p>
+        <p class="small text-secondary mb-3">${fertilityInfo}</p>
+        <button class="btn btn-primary btn-sm" id="panelAddButton">
+          <i class="bi bi-plus-lg me-1"></i>Agregar información
+        </button>
+      </div>`;
+
+    $("#panelAddButton").addEventListener(
+      "click",
+      ()=>openRecordDialog(date)
+    );
+
+    return;
+  }
+
+  const symptoms = record.symptoms?.length
+    ? record.symptoms.map(
+        symptom=>`<span class="badge badge-soft me-1 mb-1">${escapeHTML(symptom)}</span>`
+      ).join("")
+    : "Sin síntomas registrados";
+
+  panel.innerHTML = `
+    <div class="row g-3">
+      <div class="col-sm-6">
+        <div class="small text-secondary">Menstruación</div>
+        <strong>${record.period ? "Sí" : "No"}</strong>
+      </div>
+
+      <div class="col-sm-6">
+        <div class="small text-secondary">Dolor</div>
+        <strong>${Number(record.pain || 0)}/10</strong>
+      </div>
+      <div class="col-12">
+        <div class="small text-secondary">Estimación del ciclo</div>
+        <strong>${fertilityInfo}</strong>
+      </div>
+
+      <div class="col-sm-6">
+        <div class="small text-secondary">Estado de ánimo</div>
+        <strong>${escapeHTML(record.mood || "No indicado")}</strong>
+      </div>
+
+      <div class="col-sm-6">
+        <div class="small text-secondary">Energía</div>
+        <strong>${escapeHTML(record.energy || "No indicada")}</strong>
+      </div>
+
+      <div class="col-sm-6">
+        <div class="small text-secondary">Sueño</div>
+        <strong>${escapeHTML(record.sleep || "No indicado")}</strong>
+      </div>
+
+      <div class="col-sm-6">
+        <div class="small text-secondary">Comportamiento</div>
+        <strong>${escapeHTML(record.behavior || "No indicado")}</strong>
+      </div>
+
+      <div class="col-12">
+        <div class="small text-secondary mb-1">Síntomas</div>
+        <div>${symptoms}</div>
+      </div>
+
+      <div class="col-12">
+        <div class="small text-secondary mb-1">Comentarios</div>
+        <div>${escapeHTML(record.comment || "Sin comentarios")}</div>
+      </div>
+
+      <div class="col-12 pt-2">
+        <button class="btn btn-outline-primary btn-sm" id="editDayButton">
+          <i class="bi bi-pencil me-1"></i>Editar registro
+        </button>
+      </div>
+    </div>`;
+
+  $("#editDayButton").addEventListener(
+    "click",
+    ()=>openRecordDialog(date)
+  );
+}
+
+function renderHistory(){
+  const body = $("#historyBody");
+
+  const dates = Object.keys(state.records).sort().reverse();
+
+  if(!dates.length){
+    body.innerHTML = `
+      <tr>
+        <td colspan="6" class="text-center text-secondary py-4">
+          No hay registros todavía.
+        </td>
+      </tr>`;
+    return;
+  }
+
+  body.innerHTML = dates.map(date=>{
+    const record = state.records[date];
+
+    return `
+      <tr>
+        <td>${formatDate(date)}</td>
+        <td>
+          ${
+            record.period
+              ? '<span class="badge text-bg-danger">Sí</span>'
+              : '<span class="badge text-bg-light">No</span>'
+          }
+        </td>
+        <td>${escapeHTML((record.symptoms || []).join(", ") || "—")}</td>
+        <td>${escapeHTML(record.behavior || "—")}</td>
+        <td>${escapeHTML(record.comment || "—")}</td>
+        <td>
+          <button
+            class="btn btn-sm btn-outline-secondary edit-history"
+            data-date="${date}">
+            Editar
+          </button>
+        </td>
+      </tr>`;
+  }).join("");
+
+  $$(".edit-history").forEach(button=>{
+    button.addEventListener(
+      "click",
+      ()=>openRecordDialog(button.dataset.date)
+    );
+  });
+}
+
+function renderAll(){
+  renderSummary();
+  renderCalendar();
+  renderHistory();
+  renderDayPanel();
+}
+
+function resetRecordForm(){
+
+  $("#recordDate").value = "";
+  $("#isPeriod").checked = false;
+
+  $$('input[name="symptom"]').forEach(
+    checkbox=>checkbox.checked=false
+  );
+
+  $("#pain").value = 0;
+  $("#painValue").textContent = "0";
+
+  $("#mood").value = "";
+  $("#energy").value = "";
+  $("#sleep").value = "";
+  $("#behavior").value = "";
+  $("#comment").value = "";
+}
+
+function openRecordDialog(date){
+
+  const record = state.records[date] || {};
+
+  $("#recordDate").value = date;
+
+  $("#isPeriod").checked = Boolean(record.period);
+
+  $$('input[name="symptom"]').forEach(checkbox=>{
+    checkbox.checked =
+      (record.symptoms || []).includes(checkbox.value);
+  });
+
+  $("#pain").value = Number(record.pain || 0);
+  $("#painValue").textContent = Number(record.pain || 0);
+
+  $("#mood").value = record.mood || "";
+  $("#energy").value = record.energy || "";
+  $("#sleep").value = record.sleep || "";
+  $("#behavior").value = record.behavior || "";
+  $("#comment").value = record.comment || "";
+
+  $("#recordDialog").showModal();
+}
+
+function closeDialog(){
+  $("#recordDialog").close();
+}
+
+function saveRecord(event){
+
+  event.preventDefault();
+
+  const date = $("#recordDate").value;
+
+  if(!date){
+    showToast("Selecciona una fecha.");
+    return;
+  }
+
+  state.records[date] = {
+    period: $("#isPeriod").checked,
+
+    symptoms:
+      $$('input[name="symptom"]:checked')
+        .map(checkbox=>checkbox.value),
+
+    pain:
+      Number($("#pain").value),
+
+    mood:
+      $("#mood").value,
+
+    energy:
+      $("#energy").value,
+
+    sleep:
+      $("#sleep").value,
+
+    behavior:
+      $("#behavior").value,
+
+    comment:
+      $("#comment").value.trim(),
+
+    updatedAt:
+      new Date().toISOString()
+  };
+
+  state.selectedDate = date;
+
+  saveData();
+  renderAll();
+  closeDialog();
+
+  showToast("Registro guardado correctamente.");
+}
+
+function saveSettings(event){
+
+  event.preventDefault();
+
+  const cycle =
+    Number($("#cycleLength").value);
+
+  const period =
+    Number($("#periodLength").value);
+
+  if(cycle < 15 || cycle > 60){
+    showToast("La duración del ciclo debe estar entre 15 y 60 días.");
+    return;
+  }
+
+  if(period < 1 || period > 15){
+    showToast("La duración de menstruación debe estar entre 1 y 15 días.");
+    return;
+  }
+
+  state.settings.cycleLength = cycle;
+  state.settings.periodLength = period;
+
+  saveData();
+  renderAll();
+
+  showToast("Configuración actualizada.");
+}
+
+function showToast(message){
+
+  $("#toastMessage").textContent = message;
+
+  const toast =
+    bootstrap.Toast.getOrCreateInstance(
+      $("#appToast"),
+      {delay:2800}
+    );
+
+  toast.show();
+}
+
+function goToday(){
+
+  const today = new Date();
+
+  state.viewDate = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    1
+  );
+
+  state.selectedDate = toISO(today);
+
+  renderAll();
+
+  openRecordDialog(state.selectedDate);
+}
+
+
+function exportData(){
+  const payload = {
+    app:"Mi Ciclo",
+    version:3,
+    exportedAt:new Date().toISOString(),
+    records:state.records,
+    settings:state.settings
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(payload,null,2)],
+    {type:"application/json;charset=utf-8"}
+  );
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `mi-ciclo-respaldo-${toISO(new Date())}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showToast("Respaldo exportado correctamente.");
+}
+
+async function importData(file){
+  if(!file) return;
+
+  try{
+    const text = await file.text();
+    const imported = JSON.parse(text);
+
+    if(!imported || typeof imported !== "object" ||
+       !imported.records || typeof imported.records !== "object"){
+      throw new Error("Formato de respaldo no válido.");
+    }
+
+    const replace = confirm(
+      "¿Deseas REEMPLAZAR los datos actuales con el respaldo?\n\n" +
+      "Aceptar = reemplazar.\nCancelar = combinar sin borrar los registros actuales."
+    );
+
+    if(replace){
+      state.records = imported.records;
+    }else{
+      state.records = {...state.records, ...imported.records};
+    }
+
+    if(imported.settings && typeof imported.settings === "object"){
+      state.settings = {...state.settings, ...imported.settings};
+    }
+
+    saveData();
+    renderAll();
+    showToast("Datos importados correctamente.");
+  }catch(error){
+    console.error(error);
+    showToast("No fue posible importar el archivo. Verifica que sea un respaldo JSON válido.");
+  }finally{
+    $("#importFile").value = "";
+  }
+}
+
+$("#exportButton").addEventListener("click",exportData);
+$("#importButton").addEventListener("click",()=>$("#importFile").click());
+$("#importFile").addEventListener("change",event=>{
+  importData(event.target.files?.[0]);
+});
+
+$("#prevMonth").addEventListener("click",()=>{
+  state.viewDate.setMonth(
+    state.viewDate.getMonth()-1
+  );
+  renderCalendar();
+});
+
+$("#nextMonth").addEventListener("click",()=>{
+  state.viewDate.setMonth(
+    state.viewDate.getMonth()+1
+  );
+  renderCalendar();
+});
+
+$("#addButton").addEventListener("click",()=>{
+  openRecordDialog(
+    state.selectedDate || toISO(new Date())
+  );
+});
+
+$("#emptyAddButton").addEventListener("click",()=>{
+  openRecordDialog(
+    state.selectedDate || toISO(new Date())
+  );
+});
+
+$("#todayButton").addEventListener("click",goToday);
+
+$("#recordForm").addEventListener(
+  "submit",
+  saveRecord
+);
+
+$("#settingsForm").addEventListener(
+  "submit",
+  saveSettings
+);
+
+$("#closeDialog").addEventListener(
+  "click",
+  closeDialog
+);
+
+$("#cancelDialog").addEventListener(
+  "click",
+  closeDialog
+);
+
+$("#pain").addEventListener("input",()=>{
+  $("#painValue").textContent =
+    $("#pain").value;
+});
+
+$("#clearButton").addEventListener("click",()=>{
+
+  const confirmed = confirm(
+    "¿Seguro que deseas eliminar todos los registros y la configuración?"
+  );
+
+  if(!confirmed) return;
+
+  localStorage.removeItem(STORAGE_KEY);
+
+  state.records = {};
+  state.settings = {
+    cycleLength:28,
+    periodLength:5
+  };
+  state.selectedDate = null;
+
+  renderAll();
+
+  showToast("Todos los datos locales fueron eliminados.");
+});
+
+loadData();
+renderAll();
+</script>
+
+</body>
+</html>
