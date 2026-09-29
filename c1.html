@@ -356,7 +356,7 @@ footer{color:var(--muted)}
   <section id="resumen" class="row g-3 mb-4">
     <div class="col-6 col-lg-3">
       <div class="summary-card">
-        <span class="label">Último inicio</span>
+        <span class="label">Inicio del último período</span>
         <span class="value" id="summaryLast">—</span>
         <span class="hint" id="summaryLastHint">Sin registros</span>
       </div>
@@ -365,7 +365,7 @@ footer{color:var(--muted)}
       <div class="summary-card">
         <span class="label">Día del ciclo</span>
         <span class="value" id="summaryCycleDay">—</span>
-        <span class="hint">desde el último inicio</span>
+        <span class="hint">desde el primer día de la última menstruación</span>
       </div>
     </div>
     <div class="col-6 col-lg-3">
@@ -441,9 +441,15 @@ footer{color:var(--muted)}
 
     <div class="col-lg-5" id="configuracion">
       <div class="card h-100">
-        <div class="card-header p-3">
+        <div class="card-header p-3 d-flex justify-content-between align-items-center gap-2">
           <h2 class="h5 mb-0">Configuración</h2>
+          <button class="btn btn-outline-secondary btn-sm" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#settingsCollapse"
+                  aria-expanded="false" aria-controls="settingsCollapse">
+            <i class="bi bi-chevron-down me-1"></i>Ver
+          </button>
         </div>
+        <div class="collapse" id="settingsCollapse">
         <div class="card-body">
           <form id="settingsForm">
             <div class="mb-3">
@@ -484,6 +490,7 @@ footer{color:var(--muted)}
             No constituyen diagnóstico médico ni deben utilizarse como método anticonceptivo. Los días de mayor fertilidad son solo una estimación y no garantizan embarazo ni ausencia de embarazo.
           </div>
         </div>
+        </div>
       </div>
     </div>
 
@@ -492,10 +499,18 @@ footer{color:var(--muted)}
   <section id="historial" class="card mb-4">
     <div class="card-header p-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
       <h2 class="h5 mb-0">Historial</h2>
-      <button class="btn btn-outline-danger btn-sm" id="clearButton">
-        <i class="bi bi-trash3 me-1"></i>Eliminar todos los datos
-      </button>
+      <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary btn-sm" type="button"
+                data-bs-toggle="collapse" data-bs-target="#historyCollapse"
+                aria-expanded="false" aria-controls="historyCollapse">
+          <i class="bi bi-chevron-down me-1"></i>Ver
+        </button>
+        <button class="btn btn-outline-danger btn-sm" id="clearButton">
+          <i class="bi bi-trash3 me-1"></i>Eliminar todos los datos
+        </button>
+      </div>
     </div>
+    <div class="collapse" id="historyCollapse">
     <div class="table-responsive">
       <table class="table history-table align-middle mb-0">
         <thead>
@@ -510,6 +525,7 @@ footer{color:var(--muted)}
         </thead>
         <tbody id="historyBody"></tbody>
       </table>
+    </div>
     </div>
   </section>
 
@@ -749,10 +765,17 @@ function saveData(){
 }
 
 function getPeriodStarts(){
-  return Object.entries(state.records)
+  const periodDays = Object.entries(state.records)
     .filter(([,record]) => record.period === true)
     .map(([date]) => date)
     .sort();
+
+  // Solo el primer día de cada grupo consecutivo de menstruación
+  // se considera inicio de un nuevo período.
+  return periodDays.filter((date,index)=>{
+    if(index === 0) return true;
+    return daysBetween(periodDays[index-1],date) > 1;
+  });
 }
 
 function getLastPeriod(){
@@ -1268,6 +1291,11 @@ function saveSettings(event){
 
   saveData();
   renderAll();
+
+  const settingsCollapse = document.getElementById("settingsCollapse");
+  if(settingsCollapse){
+    bootstrap.Collapse.getOrCreateInstance(settingsCollapse,{toggle:false}).hide();
+  }
 
   showToast("Configuración actualizada.");
 }
